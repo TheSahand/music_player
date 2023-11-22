@@ -477,61 +477,70 @@ class _RecentlyList extends StatelessWidget {
     return SliverToBoxAdapter(
       child: SizedBox(
         height: 18.h,
-        child: ListView.builder(
-          reverse: true,
-          shrinkWrap: true,
-          itemCount: recentlyPlayed.length,
-          scrollDirection: Axis.horizontal,
-          itemBuilder: (context, index) {
-            return GestureDetector(
-              onTap: () {},
-              child: Container(
-                margin: const EdgeInsets.only(left: 16),
-                height: 50.w,
-                width: 50.w,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(15),
-                  child: Stack(
-                    alignment: Alignment.bottomCenter,
-                    children: [
-                      MyQueryArtWork(
-                          size: 100,
-                          artWorkType: ArtworkType.AUDIO,
-                          id: recentlyPlayed[index].id,
-                          borderRadius: BorderRadius.circular(5)),
-                      ClipRRect(
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                          child: Container(
-                            height: 7.h,
-                            width: double.infinity,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  recentlyPlayed[index].displayName,
-                                  maxLines: 1,
-                                  style: TextStyle(
-                                      color: Colors.white, fontSize: 15.sp),
+        child: recentlyPlayed.isNotEmpty
+            ? ListView.builder(
+                reverse: true,
+                shrinkWrap: true,
+                itemCount: recentlyPlayed.length,
+                scrollDirection: Axis.horizontal,
+                itemBuilder: (context, index) {
+                  return GestureDetector(
+                    onTap: () {},
+                    child: Container(
+                      margin: const EdgeInsets.only(left: 16),
+                      height: 50.w,
+                      width: 50.w,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(15),
+                        child: Stack(
+                          alignment: Alignment.bottomCenter,
+                          children: [
+                            MyQueryArtWork(
+                                size: 100,
+                                artWorkType: ArtworkType.AUDIO,
+                                id: recentlyPlayed[index].id,
+                                borderRadius: BorderRadius.circular(5)),
+                            ClipRRect(
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+                                child: Container(
+                                  height: 7.h,
+                                  width: double.infinity,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        recentlyPlayed[index].displayName,
+                                        maxLines: 1,
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 15.sp),
+                                      ),
+                                      Text(
+                                        recentlyPlayed[index].artist!,
+                                        maxLines: 1,
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 15.sp),
+                                      )
+                                    ],
+                                  ),
                                 ),
-                                Text(
-                                  recentlyPlayed[index].artist!,
-                                  maxLines: 1,
-                                  style: TextStyle(
-                                      color: Colors.white, fontSize: 15.sp),
-                                )
-                              ],
-                            ),
-                          ),
+                              ),
+                            )
+                          ],
                         ),
-                      )
-                    ],
-                  ),
+                      ),
+                    ),
+                  );
+                },
+              )
+            : Center(
+                child: Text(
+                  'List is Empty',
+                  style: TextStyle(color: Colors.white),
                 ),
               ),
-            );
-          },
-        ),
       ),
     );
   }
