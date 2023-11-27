@@ -24,6 +24,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  bool isPermission = false;
   ScrollController controller = ScrollController();
   final OnAudioQuery audioQuery = OnAudioQuery();
   final AudioPlayer player = AudioPlayer();
@@ -44,9 +45,14 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void requestPermisssion() async {
+  Future<void> requestPermisssion() async {
     await Permission.storage.request();
     final permissionStatus = await Permission.storage.status;
+    if (permissionStatus.isGranted) {
+      setState(() {
+        isPermission = true;
+      });
+    }
     if (permissionStatus.isDenied) {
       await Permission.storage.request();
       if (permissionStatus.isDenied) {
@@ -83,181 +89,195 @@ class _HomeScreenState extends State<HomeScreen> {
                 SliverFillRemaining(
                   child: TabBarView(
                     children: [
-                      FutureBuilder<List<SongModel>>(
-                        future: audioQuery.querySongs(
-                            sortType: SongSortType.DISPLAY_NAME,
-                            orderType: OrderType.DESC_OR_GREATER,
-                            uriType: UriType.EXTERNAL,
-                            ignoreCase: true),
-                        builder: (context, snapshot) {
-                          if (snapshot.data == null) {
-                            return Center(
-                              child: Text(
-                                'Loading...',
-                                style: TextStyle(
-                                    fontSize: 18.sp, color: Colors.white),
-                              ),
-                            );
-                          }
-                          if (snapshot.data!.isEmpty) {
-                            return Center(
-                                child: Text(
-                              'No songs found',
-                              style: TextStyle(
-                                  fontSize: 18.sp, color: Colors.white),
-                            ));
-                          }
-                          songs = snapshot.data!;
-                          return ListView.builder(
-                            itemCount: snapshot.data!.length,
-                            controller: controller,
-                            itemBuilder: (context, index) {
-                              return InkWell(
-                                onTap: () {
-                                  recentlyPLayed.add(snapshot.data![index]);
-                                  BlocProvider.of<HomeBloc>(context).add(
-                                      HomeChangeSongEvent(
-                                          index, snapshot.data!, player));
+                      isPermission == false
+                          ? const SizedBox()
+                          : FutureBuilder<List<SongModel>>(
+                              future: audioQuery.querySongs(
+                                  sortType: SongSortType.DISPLAY_NAME,
+                                  orderType: OrderType.DESC_OR_GREATER,
+                                  uriType: UriType.EXTERNAL,
+                                  ignoreCase: true),
+                              builder: (context, snapshot) {
+                                if (snapshot.data == null) {
+                                  return Center(
+                                    child: Text(
+                                      'Loading...',
+                                      style: TextStyle(
+                                          fontSize: 18.sp, color: Colors.white),
+                                    ),
+                                  );
+                                }
+                                if (snapshot.data!.isEmpty) {
+                                  return Center(
+                                      child: Text(
+                                    'No songs found',
+                                    style: TextStyle(
+                                        fontSize: 18.sp, color: Colors.white),
+                                  ));
+                                }
+                                songs = snapshot.data!;
+                                return ListView.builder(
+                                  itemCount: snapshot.data!.length,
+                                  controller: controller,
+                                  itemBuilder: (context, index) {
+                                    return InkWell(
+                                      onTap: () {
+                                        recentlyPLayed
+                                            .add(snapshot.data![index]);
+                                        BlocProvider.of<HomeBloc>(context).add(
+                                            HomeChangeSongEvent(
+                                                index, snapshot.data!, player));
 
-                                  playSong(snapshot.data![index].uri, index,
-                                      snapshot.data!);
-                                  showFloatingContainer = true;
-                                  setState(() {});
-                                },
-                                child: Container(
-                                  margin: const EdgeInsets.only(
-                                      left: 16, bottom: 10, top: 10),
-                                  height: 18.w,
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      MyQueryArtWork(
-                                          borderRadius:
-                                              BorderRadius.circular(5),
-                                          id: snapshot.data![index].id,
-                                          size: 20,
-                                          artWorkType: ArtworkType.AUDIO),
-                                      SizedBox(
-                                        width: 2.w,
-                                      ),
-                                      Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceAround,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          SizedBox(
-                                            width: 60.w,
-                                            child: Text(
-                                              snapshot.data![index].artist!,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                  fontSize: 16.sp,
-                                                  color: Colors.white),
-                                              textAlign: TextAlign.left,
+                                        playSong(snapshot.data![index].uri,
+                                            index, snapshot.data!);
+                                        showFloatingContainer = true;
+                                        setState(() {});
+                                      },
+                                      child: Container(
+                                        margin: const EdgeInsets.only(
+                                            left: 16, bottom: 10, top: 10),
+                                        height: 18.w,
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            MyQueryArtWork(
+                                                borderRadius:
+                                                    BorderRadius.circular(5),
+                                                id: snapshot.data![index].id,
+                                                size: 20,
+                                                artWorkType: ArtworkType.AUDIO),
+                                            SizedBox(
+                                              width: 2.w,
                                             ),
-                                          ),
-                                          SizedBox(
-                                            width: 60.w,
-                                            child: Text(
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                  fontSize: 16.sp,
-                                                  color: Colors.white),
-                                              textAlign: TextAlign.left,
-                                              snapshot.data![index].displayName,
+                                            Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.spaceAround,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                SizedBox(
+                                                  width: 60.w,
+                                                  child: Text(
+                                                    snapshot
+                                                        .data![index].artist!,
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                        fontSize: 16.sp,
+                                                        color: Colors.white),
+                                                    textAlign: TextAlign.left,
+                                                  ),
+                                                ),
+                                                SizedBox(
+                                                  width: 60.w,
+                                                  child: Text(
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                        fontSize: 16.sp,
+                                                        color: Colors.white),
+                                                    textAlign: TextAlign.left,
+                                                    snapshot.data![index]
+                                                        .displayName,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  formatDuration(Duration(
+                                                      milliseconds: snapshot
+                                                          .data![index]
+                                                          .duration!)),
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp,
+                                                      color: Colors.white),
+                                                )
+                                              ],
                                             ),
-                                          ),
-                                          Text(
-                                            formatDuration(Duration(
-                                                milliseconds: snapshot
-                                                    .data![index].duration!)),
-                                            style: TextStyle(
-                                                fontSize: 16.sp,
-                                                color: Colors.white),
-                                          )
-                                        ],
+                                            Spacer(),
+                                            IconButton(
+                                                onPressed: () {},
+                                                icon: Image(
+                                                    width: 5.w,
+                                                    height: 5.w,
+                                                    image: AssetImage(
+                                                        'images/more.png')))
+                                          ],
+                                        ),
                                       ),
-                                      Spacer(),
-                                      IconButton(
-                                          onPressed: () {},
-                                          icon: Image(
-                                              width: 5.w,
-                                              height: 5.w,
-                                              image: AssetImage(
-                                                  'images/more.png')))
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                            padding: EdgeInsets.only(bottom: 16.h),
-                          );
-                        },
-                      ),
+                                    );
+                                  },
+                                  padding: EdgeInsets.only(bottom: 16.h),
+                                );
+                              },
+                            ),
                       Container(
                         color: Color(0xff1F1F28),
                       ),
                       Container(
-                        child: FutureBuilder<List<AlbumModel>>(
-                            future: audioQuery.queryAlbums(),
-                            builder: (context, snapshot) {
-                              if (snapshot.data == null) {
-                                return Center(
-                                  child: Text(
-                                    'Loading...',
-                                    style: TextStyle(
-                                        fontSize: 18.sp, color: Colors.white),
-                                  ),
-                                );
-                              }
-                              if (snapshot.data!.isEmpty) {
-                                return Center(
-                                    child: Text(
-                                  'No songs found',
-                                  style: TextStyle(
-                                      fontSize: 18.sp, color: Colors.white),
-                                ));
-                              }
-                              return ListView.builder(
-                                itemCount: snapshot.data!.length,
-                                controller: controller,
-                                itemBuilder: (context, index) {
-                                  return GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => AlbumsScreen(
-                                              albumModel: snapshot.data![index],
-                                            ),
-                                          ));
-                                    },
-                                    child: Container(
-                                      child: Row(
-                                        children: [
-                                          MyQueryArtWork(
-                                              borderRadius:
-                                                  BorderRadius.circular(5),
-                                              id: snapshot.data![index].id,
-                                              size: 20,
-                                              artWorkType: ArtworkType.ALBUM),
-                                          Text(
-                                            snapshot.data![index].artist!,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                            ),
-                                          )
-                                        ],
+                        child: isPermission == false
+                            ? const SizedBox()
+                            : FutureBuilder<List<AlbumModel>>(
+                                future: audioQuery.queryAlbums(),
+                                builder: (context, snapshot) {
+                                  if (snapshot.data == null) {
+                                    return Center(
+                                      child: Text(
+                                        'Loading...',
+                                        style: TextStyle(
+                                            fontSize: 18.sp,
+                                            color: Colors.white),
                                       ),
-                                    ),
+                                    );
+                                  }
+                                  if (snapshot.data!.isEmpty) {
+                                    return Center(
+                                        child: Text(
+                                      'No songs found',
+                                      style: TextStyle(
+                                          fontSize: 18.sp, color: Colors.white),
+                                    ));
+                                  }
+                                  return ListView.builder(
+                                    itemCount: snapshot.data!.length,
+                                    controller: controller,
+                                    itemBuilder: (context, index) {
+                                      return GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    AlbumsScreen(
+                                                  albumModel:
+                                                      snapshot.data![index],
+                                                ),
+                                              ));
+                                        },
+                                        child: Container(
+                                          child: Row(
+                                            children: [
+                                              MyQueryArtWork(
+                                                  borderRadius:
+                                                      BorderRadius.circular(5),
+                                                  id: snapshot.data![index].id,
+                                                  size: 20,
+                                                  artWorkType:
+                                                      ArtworkType.ALBUM),
+                                              Text(
+                                                snapshot.data![index].artist!,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                ),
+                                              )
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   );
-                                },
-                              );
-                            }),
+                                }),
                       ),
                       Container(
                         color: Color(0xff1F1F28),
