@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:music_player/bloc/home_screen/home_bloc.dart';
 import 'package:music_player/bloc/home_screen/home_event.dart';
@@ -8,7 +9,9 @@ import 'package:music_player/bloc/home_screen/home_state.dart';
 import 'package:music_player/bloc/songs_screen.dart/songs_bloc.dart';
 import 'package:music_player/bloc/songs_screen.dart/songs_event.dart';
 import 'package:music_player/constant/colors.dart';
+import 'package:music_player/models/play_list.dart';
 import 'package:music_player/screens/albums_screen.dart';
+import 'package:music_player/screens/play_lists_screen.dart';
 import 'package:music_player/screens/song_screen.dart';
 import 'package:music_player/widgets/query_art_work.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -33,7 +36,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isSongPlaying = false;
   bool showFloatingContainer = false;
   List<SongModel> recentlyPLayed = [];
-
+  var playListBox = Hive.box<PlayList>('PlayListBox');
+  TextEditingController textFieldController = TextEditingController();
   @override
   void initState() {
     requestPermisssion();
@@ -213,8 +217,111 @@ class _HomeScreenState extends State<HomeScreen> {
                               },
                             ),
                       Container(
-                        color: Color(0xff1F1F28),
-                      ),
+                          child: Stack(
+                        alignment: Alignment.topRight,
+                        children: [
+                          ValueListenableBuilder(
+                            valueListenable: playListBox.listenable(),
+                            builder: (context, value, child) {
+                              return ListView.builder(
+                                itemCount: playListBox.values.length,
+                                itemBuilder: (context, index) {
+                                  var playListName =
+                                      playListBox.values.toList()[index];
+                                  return Column(
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    PlayListsScreen(),
+                                              ));
+                                        },
+                                        child: Container(
+                                          margin: EdgeInsets.all(5),
+                                          height: 18.w,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                playListName.playListName,
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      Divider(
+                                        color: Colors.white,
+                                        thickness: 1,
+                                      )
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                          Positioned(
+                            top: 20,
+                            right: 20,
+                            child: GestureDetector(
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    content: Container(
+                                      height: 115,
+                                      color: Colors.white,
+                                      child: Column(
+                                        children: [
+                                          Text('New playlist'),
+                                          TextField(
+                                            controller: textFieldController,
+                                          ),
+                                          Spacer(),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              TextButton(
+                                                  onPressed: () {
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: Text('CANCEL')),
+                                              TextButton(
+                                                  onPressed: () {
+                                                    createPlayList(
+                                                        textFieldController
+                                                            .text);
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: Text('CREATE'))
+                                            ],
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Color(0xffFE553F)),
+                                child: Icon(Icons.add),
+                              ),
+                            ),
+                          )
+                        ],
+                      )),
                       Container(
                         child: isPermission == false
                             ? const SizedBox()
@@ -322,6 +429,11 @@ class _HomeScreenState extends State<HomeScreen> {
         currentIndex = index;
       }
     });
+  }
+
+  void createPlayList(String playListName) {
+    var playlist = PlayList(playListName);
+    playListBox.add(playlist);
   }
 }
 
@@ -457,7 +569,6 @@ class _AppBar extends StatelessWidget {
           toolbarHeight: 1.h,
           pinned: true,
           bottom: TabBar(
-              isScrollable: true,
               labelStyle: TextStyle(fontSize: 17.sp),
               labelColor: Color(0xffFE553F),
               unselectedLabelColor: Colors.white,
@@ -468,7 +579,7 @@ class _AppBar extends StatelessWidget {
                   text: 'Songs',
                 ),
                 Tab(
-                  text: 'PlayLists',
+                  text: 'PlayList',
                 ),
                 Tab(
                   text: 'Albums',

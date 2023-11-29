@@ -71,11 +71,13 @@ class _SongScreenState extends State<SongScreen> {
   }
 
   void _updateCurrentPlayingSongDetails(int index) {
-    setState(() {
-      if (songModel!.isNotEmpty) {
-        currentIndex = index;
-      }
-    });
+    if (mounted) {
+      setState(() {
+        if (songModel!.isNotEmpty) {
+          currentIndex = index;
+        }
+      });
+    }
   }
 
   @override
@@ -189,10 +191,12 @@ class _SongScreenState extends State<SongScreen> {
                         value: position.inSeconds.toDouble(),
                         max: duration.inSeconds.toDouble(),
                         onChanged: (value) {
-                          setState(() {
-                            SliderValue(value.toInt());
-                            value = value;
-                          });
+                          if (mounted) {
+                            setState(() {
+                              sliderValue(value.toInt());
+                              value = value;
+                            });
+                          }
                         },
                       ),
                     ),
@@ -238,20 +242,18 @@ class _SongScreenState extends State<SongScreen> {
                       GestureDetector(
                         onTap: () async {
                           try {
-                            if (player!.hasPrevious) {
+                            if (currentIndex != null && player!.hasPrevious) {
                               await player!.seekToPrevious();
+                             if(mounted){
+                               setState(() {
+                                currentIndex = currentIndex! - 1;
+                              });
+                             }
                             }
-                          } catch (e) {}
-
-                          if (currentIndex != null) {
-                            setState(() {
-                              if (player!.hasPrevious) {
-                                currentIndex! - 1;
-                              }
-                            });
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(e.toString())));
                           }
-                          // context.read<SongsBloc>().add(
-                          //     SongsChangeSongEvent(currentIndex!, songModel!));
                         },
                         child: MyBoxDecoration(
                             innerPadding: 12, imageUrl: 'images/pervious.png'),
@@ -270,20 +272,17 @@ class _SongScreenState extends State<SongScreen> {
                       GestureDetector(
                           onTap: () async {
                             try {
-                              if (player!.hasNext) {
+                              if (currentIndex != null && player!.hasNext) {
                                 await player!.seekToNext();
+                                if (mounted) {
+                                  setState(() {
+                                    if (player!.hasNext) {
+                                      currentIndex! + 1;
+                                    }
+                                  });
+                                }
                               }
                             } catch (e) {}
-
-                            if (currentIndex != null) {
-                              setState(() {
-                                if (player!.hasNext) {
-                                  currentIndex! + 1;
-                                }
-                              });
-                            }
-                            // context.read<SongsBloc>().add(SongsChangeSongEvent(
-                            //     currentIndex!, songModel!));
                           },
                           child: MyBoxDecoration(
                               innerPadding: 12, imageUrl: 'images/next.png')),
@@ -302,7 +301,7 @@ class _SongScreenState extends State<SongScreen> {
     );
   }
 
-  void SliderValue(int seconds) {
+  void sliderValue(int seconds) {
     Duration duration = Duration(seconds: seconds);
     player!.seek(duration);
   }
